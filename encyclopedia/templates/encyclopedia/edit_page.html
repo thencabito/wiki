@@ -6,6 +6,15 @@
 
 {% block body %}
     
-    <h1>Add a new page here</h1>
+    <h1>Modify your page</h1>
 
+    <form action="{% url 'encyclopedia:editing' %}" method="POST">
+        {% csrf_token %}
+        <br>
+        {{ title }}
+        <br>
+        {{ content }}
+        <br>
+        <input type="submit">
+    </form>
 {% endblock %}

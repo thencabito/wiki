@@ -7,13 +7,12 @@
 {% block body %}
     
     {{ body|safe }}
-    
-       
-    <!-- <form class="no_form" action="{% url 'encyclopedia:edit_page' %}" method="post">
+      
+    <form action="{% url 'encyclopedia:edit_page' %}" method="post">
         {% csrf_token %}
-        {{ form }}
+        <input type="hidden" id="title" name="edit" value="{{ title }}">
         <input type="submit" value="Edit page">
     </form>
-    <a href="{% url 'encyclopedia:edit_page'%}"> Edit page </a> -->
+    <!-- <a href="{% url 'encyclopedia:edit_page'%}"> Edit page </a> -->
 
 {% endblock %}

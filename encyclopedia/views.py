@@ -4,15 +4,19 @@ from . import util
 from django import forms
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from random import randint
 
 class NewTaskFormT(forms.Form):
-    title = forms.CharField(widget=forms.Textarea, label="Title", max_length=100, help_text='100 characters max.')
-
+    title = forms.CharField(widget=forms.Textarea(attrs={'placeholder': ''}), label="Title", max_length=100)
+    def __init__(self, *args, **kwargs):
+        super(NewTaskFormT, self).__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            self.fields[field_name].widget.attrs['placeholder'] = field.label
 class NewTaskFormC(forms.Form):
-    content = forms.CharField(widget=forms.Textarea, label="Content", max_length=100, help_text='100 characters max.')
+    content = forms.CharField(widget=forms.Textarea(attrs={'placeholder': ''}), label="Content", max_length=100)
 
 class NewTaskFormE(forms.Form):
-    edit = forms.CharField(required=False)
+    edit = forms.CharField(widget=forms.TextInput, label="Edit", required=False)
 
 def index(request):
     lists = util.list_entries()
@@ -34,7 +38,7 @@ def title(request, item):
     return render(
         request,
         "encyclopedia/title.html",
-        {"title": title, "body": mk2html, "form": NewTaskFormE()})
+        {"title": title, "body": mk2html})
 
 def search(request):
 
@@ -81,24 +85,70 @@ def new_page(request):
         if ((titled != '') and (content != '')):
             util.save_entry(titled,content)
 
-        data = []
-        data.append(titled)
-
-        return title(request, titled)
- 
-    return render(request, "encyclopedia/new_page.html",
+        last = title(request, titled)
+        
+    else:
+        last = render(request, "encyclopedia/new_page.html",
         {"title": NewTaskFormT(),"content": NewTaskFormC()
         })
+    
+    return last
 
 def edit_page(request):
+
+    titled = ''
+    content = ''
 
     if request.method == "POST":
         form = NewTaskFormE(request.POST)
         if form.is_valid():
-            edit = form.cleaned_data["edit"]
-        print(form)
-        print("Este es edit:", edit)
+            titled = form.cleaned_data["edit"]
+        content = util.get_entry(titled)
 
+    #title_form = forms.CharField(widget=forms.Textarea(attrs={'placeholder': titled}), label="Title", max_length=100)
+    #content_form = forms.CharField(widget=forms.Textarea(attrs={'placeholder': content}), label="Title", max_length=100)
+    #print(form.order_fields())
     return render(request, "encyclopedia/edit_page.html",
-        {"title": NewTaskFormE()
+        {"title": NewTaskFormT(),"content": NewTaskFormC()
         })
+
+def editing(request):
+
+    if request.method == "POST":
+        
+        form = NewTaskFormT(request.POST)
+        if form.is_valid():
+            titled = form.cleaned_data["title"]
+        else:
+            return render(request,"encyclopedia/edit_page.html", {
+                "form": form
+            })
+
+        form = NewTaskFormC(request.POST)
+        if form.is_valid():
+            content = form.cleaned_data["content"]
+        else:
+            return render(request,"encyclopedia/edit_page.html", {
+                "form": form
+            })
+
+        if ((titled != '') and (content != '')):
+            util.save_entry(titled,content)
+
+        last = title(request, titled)
+
+        return last
+
+def random_page(request):
+
+    lists = util.list_entries()
+    lists.remove('Error404')
+    lists.remove('ErrorR')
+    value = randint(0, len(lists)-1)
+    titled = lists[value]
+    last = title(request, titled)
+
+    return last
+
+
+
