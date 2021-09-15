@@ -6,20 +6,24 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 
 class NewTaskFormT(forms.Form):
-    title = forms.CharField(label="Title")
+    title = forms.CharField(widget=forms.Textarea, label="Title", max_length=100, help_text='100 characters max.')
 
 class NewTaskFormC(forms.Form):
-    content = forms.CharField(label="Content")
+    content = forms.CharField(widget=forms.Textarea, label="Content", max_length=100, help_text='100 characters max.')
+
+class NewTaskFormE(forms.Form):
+    edit = forms.CharField(required=False)
 
 def index(request):
     lists = util.list_entries()
     lists.remove('Error404')
+    lists.remove('ErrorR')
     return render(request, "encyclopedia/index.html", {
         "entries": lists
     })
 
 def title(request, item):
-    print(item)
+
     mk = util.get_entry(item)
 
     for i in range(len(mk)):
@@ -30,7 +34,7 @@ def title(request, item):
     return render(
         request,
         "encyclopedia/title.html",
-        {"title": title, "body": mk2html})
+        {"title": title, "body": mk2html, "form": NewTaskFormE()})
 
 def search(request):
 
@@ -71,20 +75,30 @@ def new_page(request):
                 "form": form
             })
 
+        if titled in util.list_entries():
+            return title(request, 'ErrorR')
+
         if ((titled != '') and (content != '')):
             util.save_entry(titled,content)
 
         data = []
         data.append(titled)
 
-        return render(
-        request,
-        "encyclopedia/title.html",
-        {"title": titled, "body": titled})
-
-        #Falta que al crear un nuevo elemento lo lleve a la pagina del nuevo elemento
-
-
+        return title(request, titled)
+ 
     return render(request, "encyclopedia/new_page.html",
         {"title": NewTaskFormT(),"content": NewTaskFormC()
+        })
+
+def edit_page(request):
+
+    if request.method == "POST":
+        form = NewTaskFormE(request.POST)
+        if form.is_valid():
+            edit = form.cleaned_data["edit"]
+        print(form)
+        print("Este es edit:", edit)
+
+    return render(request, "encyclopedia/edit_page.html",
+        {"title": NewTaskFormE()
         })

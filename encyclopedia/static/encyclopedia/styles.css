@@ -13,8 +13,9 @@ h1 {
 }
 
 textarea {
-    height: 90vh;
-    width: 80%;
+    height: 100px;
+    width: 500px;
+    text-align: left;
 }
 
 .main {
