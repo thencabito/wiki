@@ -7,10 +7,10 @@ from django.urls import reverse
 from random import randint
 
 class FormT(forms.Form):
-    title = forms.CharField(widget=forms.Textarea(attrs={'placeholder': ''}), max_length=100)
+    title = forms.CharField(widget=forms.Textarea(attrs={'placeholder': ''}), max_length=20)
 
 class FormC(forms.Form):
-    content = forms.CharField(widget=forms.Textarea(attrs={'placeholder': ''}), max_length=100)
+    content = forms.CharField(widget=forms.Textarea(attrs={'placeholder': ''}))
 
 class FormE(forms.Form):
     edit = forms.CharField(widget=forms.TextInput, required=False)
@@ -111,15 +111,17 @@ def edit_page(request):
 
         content = util.get_entry(titled)
 
-    return render(request, "encyclopedia/edit_page.html",
+        return render(request, "encyclopedia/edit_page.html",
         {"title": titled,"content": content
         })
 
 def editing(request):
 
+    print(request.method)
     if request.method == "POST":
         
         form = FormT(request.POST)
+        print(form.is_valid())
         if form.is_valid():
             titled = form.cleaned_data["title"]
         else:
@@ -128,6 +130,7 @@ def editing(request):
             })
 
         form = FormC(request.POST)
+        print(form.is_valid())
         if form.is_valid():
             content = form.cleaned_data["content"]
         else:
@@ -135,12 +138,15 @@ def editing(request):
                 "form": form
             })
 
+        print(titled)
+        print(content)
+
         if ((titled != '') and (content != '')):
             util.save_entry(titled,content)
 
         last = title(request, titled)
 
-    return last
+        return last
 
 def random_page(request):
 
