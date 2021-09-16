@@ -10,11 +10,14 @@
 
     <form action="{% url 'encyclopedia:editing' %}" method="POST">
         {% csrf_token %}
-        <br>
+        <h5>Title:</h5>
+        <textarea id="title" name="title">
         {{ title }}
-        <br>
+        </textarea>
+        <h5>Content:</h5>
+        <textarea id="content" name="content">
         {{ content }}
-        <br>
+        </textarea>
         <input type="submit">
     </form>
 {% endblock %}

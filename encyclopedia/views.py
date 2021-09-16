@@ -6,39 +6,38 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from random import randint
 
-class NewTaskFormT(forms.Form):
-    title = forms.CharField(widget=forms.Textarea(attrs={'placeholder': ''}), label="Title", max_length=100)
-    def __init__(self, *args, **kwargs):
-        super(NewTaskFormT, self).__init__(*args, **kwargs)
-        for field_name, field in self.fields.items():
-            self.fields[field_name].widget.attrs['placeholder'] = field.label
-class NewTaskFormC(forms.Form):
-    content = forms.CharField(widget=forms.Textarea(attrs={'placeholder': ''}), label="Content", max_length=100)
+class FormT(forms.Form):
+    title = forms.CharField(widget=forms.Textarea(attrs={'placeholder': ''}), max_length=100)
 
-class NewTaskFormE(forms.Form):
-    edit = forms.CharField(widget=forms.TextInput, label="Edit", required=False)
+class FormC(forms.Form):
+    content = forms.CharField(widget=forms.Textarea(attrs={'placeholder': ''}), max_length=100)
+
+class FormE(forms.Form):
+    edit = forms.CharField(widget=forms.TextInput, required=False)
 
 def index(request):
+
     lists = util.list_entries()
     lists.remove('Error404')
     lists.remove('ErrorR')
+
     return render(request, "encyclopedia/index.html", {
         "entries": lists
     })
 
 def title(request, item):
 
+    flag = 0
     mk = util.get_entry(item)
-
-    for i in range(len(mk)):
-        if mk[i:i+1]=='\n':
-            break
-    title = mk[2:i]
     mk2html = markdown2.markdown(mk)
+
+    if item == 'ErrorR' or item == 'Error404':
+        flag = 1
+
     return render(
         request,
         "encyclopedia/title.html",
-        {"title": title, "body": mk2html})
+        {"title": item, "body": mk2html, "flag":flag})
 
 def search(request):
 
@@ -48,6 +47,7 @@ def search(request):
 
     lists = util.list_entries()
     new_list = []
+
     for l in lists:
         if value in l:
             new_list.append(l)
@@ -63,7 +63,8 @@ def new_page(request):
 
     if request.method == "POST":
 
-        form = NewTaskFormT(request.POST)
+        form = FormT(request.POST)
+
         if form.is_valid():
             titled = form.cleaned_data["title"]
         else:
@@ -71,7 +72,8 @@ def new_page(request):
                 "form": form
             })
 
-        form = NewTaskFormC(request.POST)
+        form = FormC(request.POST)
+
         if form.is_valid():
             content = form.cleaned_data["content"]
         else:
@@ -89,7 +91,7 @@ def new_page(request):
         
     else:
         last = render(request, "encyclopedia/new_page.html",
-        {"title": NewTaskFormT(),"content": NewTaskFormC()
+        {"title": FormT(),"content": FormC()
         })
     
     return last
@@ -100,23 +102,24 @@ def edit_page(request):
     content = ''
 
     if request.method == "POST":
-        form = NewTaskFormE(request.POST)
+
+        form = FormE(request.POST)
+
         if form.is_valid():
+
             titled = form.cleaned_data["edit"]
+
         content = util.get_entry(titled)
 
-    #title_form = forms.CharField(widget=forms.Textarea(attrs={'placeholder': titled}), label="Title", max_length=100)
-    #content_form = forms.CharField(widget=forms.Textarea(attrs={'placeholder': content}), label="Title", max_length=100)
-    #print(form.order_fields())
     return render(request, "encyclopedia/edit_page.html",
-        {"title": NewTaskFormT(),"content": NewTaskFormC()
+        {"title": titled,"content": content
         })
 
 def editing(request):
 
     if request.method == "POST":
         
-        form = NewTaskFormT(request.POST)
+        form = FormT(request.POST)
         if form.is_valid():
             titled = form.cleaned_data["title"]
         else:
@@ -124,7 +127,7 @@ def editing(request):
                 "form": form
             })
 
-        form = NewTaskFormC(request.POST)
+        form = FormC(request.POST)
         if form.is_valid():
             content = form.cleaned_data["content"]
         else:
@@ -137,7 +140,7 @@ def editing(request):
 
         last = title(request, titled)
 
-        return last
+    return last
 
 def random_page(request):
 
